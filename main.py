@@ -28,10 +28,15 @@ def extract(url, tipo):
     to_path = os.path.join(os.path.dirname(__file__), data['nombre'], "2022-septiembre", data['nombre']+"csv")
     data.to_csv(to_path) """
 
-extract(url_museos, "museos")
+#extract(url_museos, "museos")
+#extract(url_bibliotecas, "bibliotecas")
 
-#data_museos = extract("museos.csv")
 
+folder = os.path.join("museos", year_month)
+filename = f"museos-{today.strftime('%d-%m-%Y')}.csv"
+filepath = 
+museos = pd.read_csv(filepath)
+print(museos)
 
 #print(data_museos.iloc[0,0])
 #año_mes = "2022-septiembre"
