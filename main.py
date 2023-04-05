@@ -1,12 +1,28 @@
 from datetime import datetime
 import os
-import pandas as pd
 from extract import extraer_urls
 from transform import merge_dfs, getCineInsights
 from loaders import MergeDataLoader, SizeByCategoryLoader, SizeByProvCatLoader, SizeBySourceLoader, CineInsightsLoader
+import logging
+import logging.handlers
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# Configuramos el logger root para escribir los mensajes a un archivo
+#logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Creamos un handler RotatingFileHandler para permitir la rotación de archivos
+file_handler = logging.handlers.RotatingFileHandler(filename='logs.log', maxBytes=1024)
+file_handler.setFormatter(formatter)
+
+# Agregamos el handler al logger root
+logger.addHandler(file_handler)
 
 
-#URLS datasets
+
 
 urls = {
     "museos": "https://datos.cultura.gob.ar/dataset/37305de4-3cce-4d4b-9d9a-fec3ca61d09f/resource/4207def0-2ff7-41d5-9095-d42ae8207a5d/download/museos_datosabiertos.csv",
@@ -19,7 +35,12 @@ urls = {
 today = datetime.now()
 year_month = today.strftime('%Y-%B')
 
-paths = extraer_urls(urls, today, year_month)
+logger.info("Extrayendo urls...")
+try:
+    paths = extraer_urls(urls, today, year_month)
+    logger.info("Urls extraidas con éxito")
+except:
+    logger.error("No se pudo extraer las urls")
 
 
 filename = f"merge-{today.strftime('%d-%m-%Y')}.csv"
@@ -27,7 +48,13 @@ folder_merge = os.path.join("merges", year_month)
 merge_path = os.path.join(folder_merge, filename)
 os.makedirs(folder_merge, exist_ok=True) 
 
-merge_data = merge_dfs(paths, merge_path)
+logger.info("Mergeando datasets")
+
+try:
+    merge_data = merge_dfs(paths, merge_path)
+    logger.info("Datasets mergeados con éxito")
+except ValueError:
+    logger.error("No se pudo mergear los datasets", ValueError)
 
 size_by_category = merge_data.getSizeByCategory()
 size_by_prov_cat = merge_data.getSizeByProvinceCategory()

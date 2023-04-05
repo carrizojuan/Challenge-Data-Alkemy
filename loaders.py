@@ -1,6 +1,5 @@
-from connection import connect
-from sqlalchemy.sql import text
 from sqlalchemy import create_engine
+from datetime import datetime
 
 # Definir los detalles de la conexión a la base de datos
 user = "postgres"
@@ -18,6 +17,7 @@ engine = create_engine(connection_string)
 class BaseLoader:
 
     def load_table(self, df):
+        df["fecha_carga"] = datetime.now()
         df.to_sql(self.table_name, con=engine, index=False, if_exists="replace")
 
 class MergeDataLoader(BaseLoader):
@@ -25,6 +25,7 @@ class MergeDataLoader(BaseLoader):
     table_name = "merge_table"
 
     def load_table(self, df):
+        
         return super().load_table(df)
 
 class SizeByCategoryLoader(BaseLoader):
