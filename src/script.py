@@ -2,10 +2,10 @@ from sqlalchemy import create_engine, text
 
 # Definir los detalles de la conexión a la base de datos
 user = "postgres"
-password = "Carry_43346"
-host = "127.0.0.1"
+password = "123456"
+host = "localhost"
 port = "5432"
-database_name = "AlkemyChallenge"
+database_name = "DataAlkemyChallenge"
 
 connection_string = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
 

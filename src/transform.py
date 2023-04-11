@@ -26,7 +26,7 @@ def getCineInsights(path):
     cines['espacio_INCAA'] = cines['espacio_INCAA'].fillna(0)
     cines['espacio_INCAA'] = cines['espacio_INCAA'].replace(['si', 'SI'], '1')
     cines['espacio_INCAA'] = cines['espacio_INCAA'].astype('int64')
-    cines_insights = cines.groupby("Provincia")["Pantallas", "Butacas", "espacio_INCAA"].sum().reset_index()
+    cines_insights = cines.groupby("Provincia")[["Pantallas", "Butacas", "espacio_INCAA"]].sum().reset_index()
     return cines_insights
 
 
