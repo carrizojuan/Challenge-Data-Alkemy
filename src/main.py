@@ -42,7 +42,7 @@ except:
 
 
 filename = f"merge-{today.strftime('%d-%m-%Y')}.csv"
-folder_merge = os.path.join("merges", year_month)
+folder_merge = os.path.join("data","merges", year_month)
 merge_path = os.path.join(folder_merge, filename)
 os.makedirs(folder_merge, exist_ok=True) 
 
