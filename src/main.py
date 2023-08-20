@@ -1,26 +1,25 @@
-from datetime import datetime
+from create_filepath import create_filepath
 import os
-from extract import extraer_urls
-from transform import merge_dfs, getCineInsights
-from loaders import MergeDataLoader, SizeByCategoryLoader, SizeByProvCatLoader, SizeBySourceLoader, CineInsightsLoader
-import logging
-import logging.handlers
+from URLExtractor import URLExtractor
+import pandas as pd
+from normalizers import CineNormalizer, BibliotecaNormalizer, MuseoNormalizer
+from transform import MergeData, CinesData
+#from loaders import MergeDataLoader, SizeByCategoryLoader, SizeByProvCatLoader, SizeBySourceLoader, CineInsightsLoader
 
-logger = logging.getLogger()
+
+#CONFIGURACION LOGGING
+
+""" logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-# Configuramos el logger root para escribir los mensajes a un archivo
-#logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 # Creamos un handler RotatingFileHandler para permitir la rotación de archivos
 file_handler = logging.handlers.RotatingFileHandler(filename='logs.log', maxBytes=1024)
 file_handler.setFormatter(formatter)
-
 # Agregamos el handler al logger root
-logger.addHandler(file_handler)
+logger.addHandler(file_handler) """
 
+
+#DEFINICION DE VARIABLES
 
 urls = {
     "museos": "https://datos.cultura.gob.ar/dataset/37305de4-3cce-4d4b-9d9a-fec3ca61d09f/resource/4207def0-2ff7-41d5-9095-d42ae8207a5d/download/museos_datosabiertos.csv",
@@ -28,41 +27,77 @@ urls = {
     "bibliotecas": "https://datos.cultura.gob.ar/dataset/37305de4-3cce-4d4b-9d9a-fec3ca61d09f/resource/01c6c048-dbeb-44e0-8efa-6944f73715d7/download/biblioteca_popular.csv"
 }
 
-#Obtencion fecha actual
 
-today = datetime.now()
-year_month = today.strftime('%Y-%B')
+#EXTRACT PROCES
 
-logger.info("Extrayendo urls...")
+filepaths = {}
+
+#logger.info("Extrayendo...")
 try:
-    paths = extraer_urls(urls, today, year_month)
-    logger.info("Urls extraidas con éxito")
+    extractor = URLExtractor()
+    for name, url in urls.items():
+        filepaths[name] = extractor.extract(url, name)    
+    #logger.info("Urls extraidas con éxito")
 except:
-    logger.error("No se pudo extraer las urls")
+    #logger.error("No se pudo extraer las urls")
+    print("error")
 
 
-filename = f"merge-{today.strftime('%d-%m-%Y')}.csv"
-folder_merge = os.path.join("data","merges", year_month)
-merge_path = os.path.join(folder_merge, filename)
-os.makedirs(folder_merge, exist_ok=True) 
+#TRANSFORM
 
-logger.info("Mergeando datasets")
+#creating dataframes to normalize
+dfs = {}
+for name, filepath in filepaths.items():
+    dfs[name] = pd.read_csv(filepath)
 
-try:
-    merge_data = merge_dfs(paths, merge_path)
-    logger.info("Datasets mergeados con éxito")
-except ValueError:
-    logger.error("No se pudo mergear los datasets", ValueError)
+#defining normalizers for every dataframe
+normalizers = {}
+normalizers["museos"] = MuseoNormalizer(dfs["museos"])
+normalizers["bibliotecas"] = BibliotecaNormalizer(dfs["bibliotecas"])
+normalizers["cines"] = CineNormalizer(dfs["cines"])
 
-size_by_category = merge_data.getSizeByCategory()
-size_by_prov_cat = merge_data.getSizeByProvinceCategory()
-size_by_source = merge_data.getSizeBySource()
+#normalizing dataframes
+norm_dfs = []
+for name, normalizer in normalizers.items():
+    norm_dfs.append(normalizer.normalize())
 
-cines_insights = getCineInsights(paths["cines"])
 
 
-MergeDataLoader().load_table(merge_data.getDF())
+#merging data
+merge_path = create_filepath("merges")
+merge_df = pd.concat(norm_dfs, axis=0, ignore_index=True)
+merge_df.to_csv(merge_path)
+
+#Analytics from merging data
+merge_data = MergeData(merge_df, dfs)
+
+
+#ANALISIS DE MERGE DATA
+
+#Count by category
+
+count_by_category = merge_data.get_count_by_category()
+
+#COUNT BY SOURCE
+
+count_by_source = merge_data.get_count_by_source()
+
+#COUNT BY PROVINCE AND CATEGORY
+
+count_by_province_category = merge_data.get_count_by_province_category()
+
+
+#CINES ANALISIS
+
+cine_data = CinesData(dfs["cines"])
+
+cines_insights = cine_data.get_insights_table()
+
+print(cines_insights)
+
+
+""" MergeDataLoader().load_table(merge_data.getDF())
 SizeByCategoryLoader().load_table(size_by_category)
 SizeByProvCatLoader().load_table(size_by_prov_cat)
 SizeBySourceLoader().load_table(size_by_source)
-CineInsightsLoader().load_table(cines_insights)
+CineInsightsLoader().load_table(cines_insights)  """

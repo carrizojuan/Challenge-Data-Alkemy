@@ -25,7 +25,6 @@ class MergeDataLoader(BaseLoader):
     table_name = "merge_table"
 
     def load_table(self, df):
-        
         return super().load_table(df)
 
 class SizeByCategoryLoader(BaseLoader):
