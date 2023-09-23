@@ -1,6 +1,6 @@
 # Challenge Data Analytics - Alkemy
 
-Link to the challenge --> 
+Link to the challenge --> [Challenge Readme](challenge.md)
 
 ### Prerequisites
 

@@ -1,13 +1,12 @@
-from abc import abstractmethod
 import pandas as pd
-import io
+
 
 class CinesData():
     def __init__(self, df_cines):
         self.df = df_cines
 
 
-    def get_insights_table(self):
+    def get_insights(self):
         cines = self.df
         cines['espacio_INCAA'] = cines['espacio_INCAA'].fillna(0)
         cines['espacio_INCAA'] = cines['espacio_INCAA'].replace(['si', 'SI'], '1')
